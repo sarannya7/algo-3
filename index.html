@@ -79,13 +79,13 @@
           } else {
             window.alert('Geocoder failed due to: ' + status);
           }
-        });
-        $("#places").find('tbody')
+          $("#places").find('tbody')
           .append($('<tr>')
             .append($('<td>')
               .text(placeAddress)
           )
         );
+        });
       });
     }
   </script>
