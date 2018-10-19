@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>TSPxplore</title>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <!-- Bootstrap core CSS -->
+  <link href="css/bootstrap.min.css" rel="stylesheet">
+  <!-- Material Design Bootstrap -->
+  <link href="css/mdb.min.css" rel="stylesheet">
+  <!-- Your custom styles (optional) -->
+  <style>
+    /* Always set the map height explicitly to define the size of the div
+     * element that contains the map. */
+    #map {
+      height: 100%;
+    }
+    /* Optional: Makes the sample page fill the window. */
+    html, body {
+      height: 100%;
+      max-width: 99.6%;
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="row" style="height:8%">
+    <div class="col-md-5">
+    </div>
+    <div class="col-md-2">
+      <h1 class="card animated fadeIn mb-2 text-center" style="margin-bottom:5%;margin-top:3%;margin-left:0.6%;">TSP Xplore</h1>
+    </div>
+  </div>
+  <div class="row" style="height:90%;margin-bottom:1%;margin-left:1%;border-radius:10px">
+    <div class="card col col-md-2">
+      <h5 class="animated fadeIn mb-1" style="margin-top:5%;margin-left:5%;">Add your places</h5>
+    </div>
+    <div class="col-md-10">
+        <div id="map" class="container-fluid" style="border-radius:10px">
+      </div>
+    </div>
+  </div>
+</div>
+  <!-- SCRIPTS -->
+  <script>
+    var map;
+    function initMap() {
+      var geocoder = new google.maps.Geocoder();
+      map = new google.maps.Map(document.getElementById('map'), {
+        center: {lat: 13.0108, lng: 74.7943},
+        zoom: 14,
+        mapTypeControlOptions: {
+          mapTypeIds: []
+        },
+        mapTypeId: google.maps.MapTypeId.ROADMAP
+      });
+
+      google.maps.event.addListener(map, 'click', function(event) {
+        if (event.placeId) {
+          event.stop();
+          console.log('You clicked on place:' + event.placeId + ', location: ' + event.latLng);
+          var marker = new google.maps.Marker({ position: event.latLng, map: map });
+        }
+      
+      });
+    }
+  </script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCq_NfdZscVJ8ZPtanPN0LOzJhlNDw6xkg&callback=initMap"
+    async defer></script>
+  <!-- JQuery -->
+  <script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
+  <!-- Bootstrap tooltips -->
+  <script type="text/javascript" src="js/popper.min.js"></script>
+  <!-- Bootstrap core JavaScript -->
+  <script type="text/javascript" src="js/bootstrap.min.js"></script>
+  <!-- MDB core JavaScript -->
+  <script type="text/javascript" src="js/mdb.min.js"></script>
+</body>
+
+</html>
