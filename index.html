@@ -50,14 +50,80 @@
   <!-- SCRIPTS -->
   <script>
     var map;
+    var markers = [];
+    var activeMark = [];
+    var dataToBackend=[];
+    var tempdata=[];
+    var len=0;
+    function fun(id){   
+    	console.log('master'+id+' length'+markers.length);
+    	markers[id].setMap(null);
+    	var index = activeMark.indexOf(id);
+    	if (index > -1) {
+    		activeMark.splice(index, 1);
+    	}
+    	
+    	tempdata=[];
+    	for(var i=0;i<dataToBackend.length;i++){
+    		if(dataToBackend[i].S==id || dataToBackend[i].D==id ){
+    			
+    		}
+    		else{
+    			tempdata.push(dataToBackend[i]);
+    		}
+    	}
+    	
+    	dataToBackend=tempdata;
+    	console.log('gdfgdfg:');
+    	console.log(dataToBackend);
+    }
+    
+    function addLocation(id){   
+    	current=markers[id];
+    	var lat = current.getPosition().lat();
+    	var lng = current.getPosition().lng();
+    	for(var i=0;i<id;i++){    		
+        	
+        	if(activeMark.includes(i)){
+        		console.log('great'+i);
+        		var lat1 = markers[i].getPosition().lat();
+            	var lng1 = markers[i].getPosition().lng();
+            
+            	var q=i;
+            	
+            	$.ajax({
+                    url: 'https://maps.googleapis.com/maps/api/distancematrix/json?units=metric&origins='+lat+','+lng+'&destinations='+lat1+','+lng1+'&key=AIzaSyCq_NfdZscVJ8ZPtanPN0LOzJhlNDw6xkg',
+                    ajaxI: i,
+                    success: function(data) {
+                    	
+             		   var d1={
+             				   "S":this.ajaxI,
+             				   "D":id,
+             				   "W":data.rows[0].elements[0].distance.text
+             		   };
+             		   var d2={
+             				   "S":id,
+             				   "D":this.ajaxI,
+             				   "W":data.rows[0].elements[0].distance.text
+             		   };
+             		   dataToBackend.push(d1);
+             		   dataToBackend.push(d2);
+                        return data;
+                    }        
+                });
+        	}        	
+    	}
+    	console.log(dataToBackend);
+    }
+    
     function initMap() {
       var geocoder = new google.maps.Geocoder();
-      var markers = [];
+    
       var placeAddress;
       map = new google.maps.Map(document.getElementById('map'), {
         center: {lat: 13.0108, lng: 74.7943},
         zoom: 14,
-        mapTypeControlOptions: {
+        mapTypeControlOarrayptions: {
           mapTypeIds: []
         },
         mapTypeId: google.maps.MapTypeId.ROADMAP
@@ -66,28 +132,64 @@
       google.maps.event.addListener(map, 'click', function(event) {
         if (event.placeId)
           event.stop();
-        markers.push(new google.maps.Marker({ position: event.latLng, map: map }));
-
+       
         geocoder.geocode({'location': event.latLng}, function(results, status) {
           if (status === 'OK') {
             if (results[0]) {
+            	 markers.push(new google.maps.Marker({ position: event.latLng, map: map }));
               placeAddress = results[0].formatted_address;
+              
+              if(placeAddress.length>40){
+              	  $("#places").find('tbody')
+                    .append($('<tr id="'+len+'">')
+                      .append($('<td title="'+placeAddress+'">')
+                        .text(placeAddress.substring(0, 37)+'...'))
+                        .append($('<td>')
+                        		.append($('<button>')
+                        				.text('-')
+                                         .attr('onClick', '$(this).parent().parent().remove();fun('+len+')')
+                                    ))
+                    );
+              	 
+              	len++;
+                }
+                else{
+              	  $("#places").find('tbody')
+                    .append($('<tr id="'+len+'">')
+                      .append($('<td title="'+placeAddress+'">')
+                        .text(placeAddress))
+                        .append($('<td>')
+                        		.append($('<button>')
+                        				.text('-')
+                                       // .attr('onClick', '$(this).parent().parent().remove()')
+                                       .attr('onClick', '$(this).parent().parent().remove();fun('+len+')')
+                                    ))                        
+                    );
+              	len++;
+                } 
+              
+              activeMark.push(len-1);
+              addLocation(len-1);
+           
+            
             } else {
               window.alert('No results found');
             }
-          } else {
+            
+          } 
+          else {
             window.alert('Geocoder failed due to: ' + status);
           }
-          $("#places").find('tbody')
-          .append($('<tr>')
-            .append($('<td>')
-              .text(placeAddress))
-          );
+         
+          
         });
       });
-    }
+      
+ }
+    
+  
   </script>
-  <script src="https://maps.googleapis.com/maps/api/js?key=API_KEY_HERE&callback=initMap"
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCq_NfdZscVJ8ZPtanPN0LOzJhlNDw6xkg&callback=initMap"
     async defer></script>
   <!-- JQuery -->
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
@@ -99,3 +201,4 @@
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.4.1/js/mdb.min.js"></script>
 </body>
 </html>
+
