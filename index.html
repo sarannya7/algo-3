@@ -41,6 +41,9 @@
     <div class="card col col-md-3">
       <h5 class="animated fadeIn mb-1" style="margin-top:5%;margin-left:5%;">Add your places</h5>
       <table id = "places"><tbody></tbody></table>
+      <input type="submit" name="Find_Route" value="Find_Route Distance base" onclick="findRoute('Dist')"/>
+       <input type="submit" name="Find_Route" value="Find_Route Time base" onclick="findRoute('Time')"/>
+       <table id = "seqPlaces"><tbody></tbody></table>
     </div>
     <div class="col-md-9">
         <div id="map" class="container-fluid" style="border-radius:10px">
@@ -52,30 +55,140 @@
     var map;
     var markers = [];
     var activeMark = [];
-    var dataToBackend=[];
+    var placeArray = [];
+    var dataToBackendDist=[];
+    var dataToBackendTime=[];
     var tempdata=[];
+    var tempdataTime=[];
     var len=0;
+    var route=[];
+    var directionsService;
+    var directionsDisplay=[];
+    var index=0;
     function fun(id){   
     	console.log('master'+id+' length'+markers.length);
     	markers[id].setMap(null);
     	var index = activeMark.indexOf(id);
     	if (index > -1) {
     		activeMark.splice(index, 1);
+    		placeArray.splice(index, 1);
     	}
     	
     	tempdata=[];
-    	for(var i=0;i<dataToBackend.length;i++){
-    		if(dataToBackend[i].S==id || dataToBackend[i].D==id ){
+    	tempdataTime=[];
+    	for(var i=0;i<dataToBackendDist.length;i++){
+    		if(dataToBackendDist[i].S==id || dataToBackendDist[i].D==id ){
     			
     		}
     		else{
-    			tempdata.push(dataToBackend[i]);
+    			tempdata.push(dataToBackendDist[i]);
+    			tempdataTime.push(dataToBackendTime[i]);
     		}
     	}
     	
-    	dataToBackend=tempdata;
+    	for(var k=0;k<directionsDisplay.length;k++)
+    	 	if(directionsDisplay[k] != null) {
+    		    directionsDisplay[k].setMap(null);
+    		    directionsDisplay[k] = null;
+    		}
+    	directionsDisplay=[];
+    	index=0;
+    	
+    	dataToBackendDist=tempdata;
+    	dataToBackendTime=tempdataTime;
     	console.log('gdfgdfg:');
-    	console.log(dataToBackend);
+    	console.log(dataToBackendDist);
+    	console.log(dataToBackendTime);
+    }
+    
+    function findRoute(inparam){   
+    	//console.log('master'+id+' length'+markers.length);
+    	$('#target').html('sending..');
+		var arrlen=activeMark.length;
+		var parameters;
+    	if(inparam=='Dist'){
+			parameters={
+    			"size":arrlen,
+    			"data": dataToBackendDist
+    		};
+		}
+    	else{
+    		parameters={
+        			"size":arrlen,
+        			"data": dataToBackendTime
+        		};
+    	}
+    	console.log("Data to backend:"+JSON.stringify(parameters));
+    	var resultroute;
+        $.ajax({
+            url: 'http://127.0.0.1:5000/',
+            type: 'post',
+            data: JSON.stringify(parameters),
+            dataType: 'json',
+            async: false,
+            contentType: 'application/json',
+            success: function (data) {
+            	var temp=data;
+            	 console.log("Result of backend: "+JSON.stringify(temp));
+            	 resultroute=JSON.parse(temp).route;
+            	 
+            	 for(var k=0;k<directionsDisplay.length;k++)
+            	 	if(directionsDisplay[k] != null) {
+            		    directionsDisplay[k].setMap(null);
+            		    directionsDisplay[k] = null;
+            		}
+            	 
+            	 directionsDisplay=[];
+            	 index=0;
+            	 
+            	 for(var i=0; i<arrlen;i++){
+                 	
+                 	
+                 	var lat1 = markers[resultroute[i]].getPosition().lat();
+                 	var lng1 = markers[resultroute[i]].getPosition().lng();
+                 	
+                 	var lat2 = markers[resultroute[(i+1)%arrlen]].getPosition().lat();
+                 	var lng2 = markers[resultroute[(i+1)%arrlen]].getPosition().lng();
+                 	calcRoute(lat1,lng1,lat2,lng2);
+                 }
+            }
+           
+        });
+       
+      // $("#seqPlaces").empty();
+       $("#seqPlaces > tbody").html("");
+       for(var j=0;j<resultroute.length;j++){
+    	   
+    	   
+    	   var placeAddress = placeArray[activeMark.indexOf(resultroute[j])]
+    	 
+    	   if(placeAddress.length>40){
+         	  $("#seqPlaces").find('tbody')
+               .append($('<tr>')
+                 .append($('<td title="'+placeAddress+'">')
+                   .text(placeAddress.substring(0, 37)+'...'))
+                   		
+               );
+           }
+           else{
+         	  $("#seqPlaces").find('tbody')
+               .append($('<tr>')
+                 .append($('<td title="'+placeAddress+'">')
+                   .text(placeAddress))
+                   		                      
+               );
+           } 
+       }
+       
+        
+        
+       
+        
+        
+        
+        
+    	//console.log('Backend CAlll');
+    	
     }
     
     function addLocation(id){   
@@ -95,30 +208,49 @@
                     url: 'https://maps.googleapis.com/maps/api/distancematrix/json?units=metric&origins='+lat+','+lng+'&destinations='+lat1+','+lng1+'&key=AIzaSyCq_NfdZscVJ8ZPtanPN0LOzJhlNDw6xkg',
                     ajaxI: i,
                     success: function(data) {
-                    	
+                       //console.log("-++--"+JSON.stringify(data));
+                       var w1=data.rows[0].elements[0].distance.value;
+                       w1=w1/1000;
+                       
+                       var w2=data.rows[0].elements[0].duration.value;
+                       w2=w2/60;
+                       
+                       
              		   var d1={
              				   "S":this.ajaxI,
              				   "D":id,
-             				   "W":data.rows[0].elements[0].distance.text
+             				   "W":parseInt(w1)
              		   };
              		   var d2={
              				   "S":id,
              				   "D":this.ajaxI,
-             				   "W":data.rows[0].elements[0].distance.text
+             				  "W":parseInt(w1)
              		   };
-             		   dataToBackend.push(d1);
-             		   dataToBackend.push(d2);
+             		  var d3={
+            				   "S":this.ajaxI,
+            				   "D":id,
+            				   "W":parseInt(w2)
+            		   };
+            		   var d4={
+            				   "S":id,
+            				   "D":this.ajaxI,
+            				  "W":parseInt(w2)
+            		   };
+             		   dataToBackendDist.push(d1);
+             		   dataToBackendDist.push(d2);
+             		   dataToBackendTime.push(d3);
+             		   dataToBackendTime.push(d4);
                         return data;
                     }        
                 });
         	}        	
     	}
-    	console.log(dataToBackend);
+    	console.log(dataToBackendDist);
     }
     
     function initMap() {
       var geocoder = new google.maps.Geocoder();
-    
+      directionsService = new google.maps.DirectionsService();
       var placeAddress;
       map = new google.maps.Map(document.getElementById('map'), {
         center: {lat: 13.0108, lng: 74.7943},
@@ -135,10 +267,13 @@
        
         geocoder.geocode({'location': event.latLng}, function(results, status) {
           if (status === 'OK') {
+        	  console.log("@@--"+(len-1));
             if (results[0]) {
-            	 markers.push(new google.maps.Marker({ position: event.latLng, map: map }));
-              placeAddress = results[0].formatted_address;
+            	
+              markers.push(new google.maps.Marker({ position: event.latLng, map: map }));
               
+              placeAddress = results[0].formatted_address;
+              placeArray.push(placeAddress);
               if(placeAddress.length>40){
               	  $("#places").find('tbody')
                     .append($('<tr id="'+len+'">')
@@ -151,7 +286,7 @@
                                     ))
                     );
               	 
-              	len++;
+              	 len++;
                 }
                 else{
               	  $("#places").find('tbody')
@@ -165,17 +300,18 @@
                                        .attr('onClick', '$(this).parent().parent().remove();fun('+len+')')
                                     ))                        
                     );
-              	len++;
+              	 len++;
                 } 
               
               activeMark.push(len-1);
+              console.log("@@--"+"---"+(len-1));
               addLocation(len-1);
            
             
             } else {
               window.alert('No results found');
             }
-            
+           
           } 
           else {
             window.alert('Geocoder failed due to: ' + status);
@@ -187,6 +323,28 @@
       
  }
     
+ 	function calcRoute( lat1,  long1,  lat2,  long2) {
+        var start = new google.maps.LatLng(lat1, long1);
+        var end = new google.maps.LatLng(lat2, long2);
+        var request = {
+          origin: start,
+          destination: end,
+          travelMode: google.maps.TravelMode.DRIVING
+        };
+        directionsService.route(request, function(response, status) {
+          if (status == google.maps.DirectionsStatus.OK) {
+        	  
+        	directionsDisplay[index]= new google.maps.DirectionsRenderer();
+            directionsDisplay[index].setDirections(response);
+            directionsDisplay[index].setMap(map);
+            directionsDisplay[index].setOptions( { suppressMarkers: true } );
+            index++;
+          } else {
+            alert("Directions Request from " + start.toUrlValue(6) + " to " + end.toUrlValue(6) + " failed: " + status);
+          }
+        });
+      }
+
   
   </script>
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCq_NfdZscVJ8ZPtanPN0LOzJhlNDw6xkg&callback=initMap"
