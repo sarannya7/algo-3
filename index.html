@@ -99,6 +99,7 @@
     	console.log('gdfgdfg:');
     	console.log(dataToBackendDist);
     	console.log(dataToBackendTime);
+ 	$("#seqPlaces > tbody").html("");
     }
     
     function findRoute(inparam){   
@@ -121,7 +122,7 @@
     	console.log("Data to backend:"+JSON.stringify(parameters));
     	var resultroute;
         $.ajax({
-            url: 'http://127.0.0.1:5000/',
+            url: 'http://127.0.0.1:5000/route',
             type: 'post',
             data: JSON.stringify(parameters),
             dataType: 'json',
