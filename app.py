@@ -283,8 +283,16 @@ def index():
 @app.route('/route', methods=['POST'])
 def index1():
     data1 = request.data
-    
-    return jsonify(test(data1))
+    t = []
+    for i in range(0,10):
+		t.append(test(data1))
+    min = t[0]
+    for ti in t:
+		print ti
+		if min['length']>ti['length']:
+			min = ti
+
+    return jsonify(js.dumps(min))
 
 
 
@@ -317,7 +325,7 @@ def test(data1):
 	#graph.addEdge(4, 2, 1)
 	#graph.addEdge(3, 4, 2)
 	#graph.addEdge(4, 3, 2)
-
+	
 	# creates a PSO instance
 	pso = PSO(graph, iterations=100, size_population=10, beta=1, alfa=0.9)
 	pso.run() # runs the PSO algorithm
@@ -330,7 +338,7 @@ def test(data1):
 	retdata['length'] = pso.getGBest().getCostPBest()
 	retdata['route'] = pso.getGBest().getPBest()
 	json_data = js.dumps(retdata)
-	return json_data
+	return retdata
 	'''
 	# random graph
 	print('Random graph...')
