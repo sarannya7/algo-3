@@ -40,21 +40,35 @@
   </div>
   <div class="row" style="height:90%;margin-bottom:1%;margin-left:1%;border-radius:10px">
     <div class="card col col-md-3">
-      <h5 class="animated fadeIn mb-1" style="margin-top:5%;margin-left:5%;">Add your places</h5>
-      <table id="places">
-        <tbody></tbody>
-      </table>
-      <input type="submit" name="Find_Route" value="Find_Route Distance base" onclick="findRoute('Dist')" />
-      <input type="submit" name="Find_Route" value="Find_Route Time base" onclick="findRoute('Time')" />
-      <table id="seqPlaces">
-        <tbody></tbody>
-      </table>
+      <div class="row" style="overflow-y:auto; overflow-x:hidden; height:45%;">
+        <h5 class="animated fadeIn mb-1" style="margin-top:5%;margin-left:5%;">Added Locations</h5>
+        <div id="places" style="margin-right:3%;margin-left:3%;">
+        </div>
+      </div>        
+      <div class="row" style="overflow-y:auto; overflow-x:hidden; height:45%">
+        <h5 class="animated fadeIn mb-1" style="margin-top:5%;margin-left:5%;">Route Sequence</h5>
+        <div id="seqPlaces" style="margin-right:3%;margin-left:3%;">
+        </div>
+      </div>
+      <div class="row" style="height:10%">
+        <div class="col-md-5"></div>
+        <div class="col-md-2">
+          <button type="button" class="btn btn-success btn-sm" onclick="findRoute('Dist')">
+            <i class="fa fa-road" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="col-md-1"></div>
+        <div class="col-md-2">
+          <button type="button" class="btn btn-info btn-sm" onclick="findRoute('Time')">
+            <i class="fa fa-clock-o" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
     </div>
     <div class="col-md-9">
       <div id="map" class="container-fluid" style="border-radius:10px">
       </div>
     </div>
-  </div>
   <!-- SCRIPTS -->
   <script>
     var map;
@@ -102,16 +116,10 @@
       dataToBackendDist = tempdata;
       dataToBackendTime = tempdataTime;
 
-    	/* console.log('gdfgdfg:');
-    	console.log(dataToBackendDist);
-    	console.log(dataToBackendTime);
-      */
-
       $("#seqPlaces > tbody").html("");
     }
 
     function findRoute(inparam) {
-      // console.log('master'+id+' length'+markers.length);
       $('#target').html('sending..');
       var arrlen = activeMark.length;
       var parameters;
@@ -128,8 +136,6 @@
         };
       }
 
-      // console.log("Data to backend:" + JSON.stringify(parameters));
-      
       var resultroute;
       $.ajax({
         url: 'http://127.0.0.1:5000/route',
@@ -140,9 +146,7 @@
         contentType: 'application/json',
         success: function (data) {
           var temp = data;
-          
-          // console.log("Result of backend: " + JSON.stringify(temp));
-          
+
           resultroute = JSON.parse(temp).route;
 
           for (var k = 0; k < directionsDisplay.length; k++)
@@ -153,9 +157,9 @@
 
           directionsDisplay = [];
           index = 0;
-
+          console.log("----" + typeof resultroute + " +++ " + resultroute);
+          
           for (var i = 0; i < arrlen; i++) {
-
 
             var lat1 = markers[resultroute[i]].getPosition().lat();
             var lng1 = markers[resultroute[i]].getPosition().lng();
@@ -168,24 +172,26 @@
 
       });
 
-      $("#seqPlaces > tbody").html("");
       for (var j = 0; j < resultroute.length; j++) {
         var placeAddress = placeArray[activeMark.indexOf(resultroute[j])]
 
-        if (placeAddress.length > 40) {
-          $("#seqPlaces").find('tbody')
-            .append($('<tr>')
-              .append($('<td title="' + placeAddress + '">')
-                .text(placeAddress.substring(0, 37) + '...'))
+        /* if (placeAddress.length > 65) {
+          $("#seqPlaces")
+            .append($('<div class="row">')
+              .append($('<div class="col-md-12">')
+                .append($('<p style="font-size:12px;" title="' + placeAddress + '">')
+                  .text(placeAddress.substring(0, 62) + '...')))
             );
         }
         else {
-          $("#seqPlaces").find('tbody')
-            .append($('<tr>')
-              .append($('<td title="' + placeAddress + '">')
-                .text(placeAddress))
+        */
+          $("#seqPlaces")
+            .append($('<div class="row">')
+              .append($('<div class="col-md-12">')
+                .append($('<p style="font-size:12px;" title="' + placeAddress + '">')
+                  .text(placeAddress)))
             );
-        }
+        //}
       }
     }
 
@@ -201,10 +207,9 @@
 
           var q = i;
           $.ajax({
-            url: 'https://maps.googleapis.com/maps/api/distancematrix/json?units=metric&origins=' + lat + ',' + lng + '&destinations=' + lat1 + ',' + lng1 + '&key=',
+            url: 'https://maps.googleapis.com/maps/api/distancematrix/json?units=metric&origins=' + lat + ',' + lng + '&destinations=' + lat1 + ',' + lng1 + '&key=AIzaSyCq_NfdZscVJ8ZPtanPN0LOzJhlNDw6xkg',
             ajaxI: i,
             success: function (data) {
-              //console.log("-++--"+JSON.stringify(data));
               var w1 = data.rows[0].elements[0].distance.value;
               w1 = w1 / 1000;
 
@@ -263,21 +268,19 @@
 
         geocoder.geocode({ 'location': event.latLng }, function (results, status) {
           if (status === 'OK') {
-            console.log("@@--" + (len - 1));
             if (results[0]) {
-
               markers.push(new google.maps.Marker({ position: event.latLng, map: map }));
 
               placeAddress = results[0].formatted_address;
               placeArray.push(placeAddress);
-              if (placeAddress.length > 40) {
-                $("#places").find('tbody')
-                  .append($('<tr id="' + len + '">')
-                    .append($('<td title="' + placeAddress + '">')
-                      .text(placeAddress.substring(0, 37) + '...'))
-                    .append($('<td>')
-                      .append($('<button>')
-                        .text('-')
+              /* if (placeAddress.length > 65) {
+                $("#places")
+                  .append($('<div class="row" id="' + len + '">')
+                    .append($('<div class="col-md-10">')
+                      .append($('<p style="font-size:12px;"title="' + placeAddress + '">')
+                        .text(placeAddress.substring(0, 62) + '...')))
+                    .append($('<div class="col-md-1">')
+                      .append($('<button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button>')
                         .attr('onClick', '$(this).parent().parent().remove();fun(' + len + ')')
                       ))
                   );
@@ -285,22 +288,21 @@
                 len++;
               }
               else {
-                $("#places").find('tbody')
-                  .append($('<tr id="' + len + '">')
-                    .append($('<td title="' + placeAddress + '">')
-                      .text(placeAddress))
-                    .append($('<td>')
-                      .append($('<button>')
-                        .text('-')
-                        // .attr('onClick', '$(this).parent().parent().remove()')
+              */
+                $("#places")
+                  .append($('<div class="row" id="' + len + '">')
+                    .append($('<div class="col-md-10">')
+                      .append($('<p style="font-size:12px; title="' + placeAddress + '">')
+                        .text(placeAddress)))
+                    .append($('<div class="col-md-1">')
+                      .append($('<button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button>')
                         .attr('onClick', '$(this).parent().parent().remove();fun(' + len + ')')
                       ))
                   );
                 len++;
-              }
+              //}
 
               activeMark.push(len - 1);
-              console.log("@@--" + "---" + (len - 1));
               addLocation(len - 1);
 
 
@@ -329,7 +331,6 @@
       };
       directionsService.route(request, function (response, status) {
         if (status == google.maps.DirectionsStatus.OK) {
-
           directionsDisplay[index] = new google.maps.DirectionsRenderer();
           directionsDisplay[index].setDirections(response);
           directionsDisplay[index].setMap(map);
@@ -343,7 +344,7 @@
 
 
   </script>
-  <script src="https://maps.googleapis.com/maps/api/js?key=&callback=initMap"
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCq_NfdZscVJ8ZPtanPN0LOzJhlNDw6xkg&callback=initMap"
     async defer></script>
   <!-- JQuery -->
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
