@@ -84,6 +84,7 @@
     var directionsService;
     var directionsDisplay = [];
     var index = 0;
+    var startLocation;
     function fun(id) {
       // console.log('master'+id+' length'+markers.length);
       markers[id].setMap(null);
@@ -116,7 +117,7 @@
       dataToBackendDist = tempdata;
       dataToBackendTime = tempdataTime;
 
-      $("#seqPlaces > tbody").html("");
+      $("#seqPlaces").html("");
     }
 
     function findRoute(inparam) {
@@ -156,6 +157,7 @@
             }
 
           directionsDisplay = [];
+ 	  $("#seqPlaces").html("");
           index = 0;
           console.log("----" + typeof resultroute + " +++ " + resultroute);
           
@@ -172,8 +174,26 @@
 
       });
 
-      for (var j = 0; j < resultroute.length; j++) {
-        var placeAddress = placeArray[activeMark.indexOf(resultroute[j])]
+
+	console.log(resultroute.length+"---"+activeMark.length+"---"+activeMark[0]+"---"+$("input[name=startpoint]:checked").val());
+      
+      var k=$("input[name=startpoint]:checked").val();
+      if ( k != undefined){
+	  //k=resultroute.indexOf(($("input[name=startpoint]:checked")).val()); console.log("<<<"+k);
+	for(var q=0;q<resultroute.length;q++){
+		if(resultroute[q]==k){
+			k=q;
+			console.log("done"+k);
+			break;
+		}	
+	}
+      }
+      else{
+	  k=resultroute.indexOf(activeMark[0]);
+      }
+      for (var j = 0; j <resultroute.length; j++) {
+	var placeAddress = placeArray[activeMark.indexOf(resultroute[(j+k)%resultroute.length])]
+        //var placeAddress = placeArray[activeMark.indexOf(resultroute[j])]
 
         /* if (placeAddress.length > 65) {
           $("#seqPlaces")
@@ -185,6 +205,7 @@
         }
         else {
         */
+	
           $("#seqPlaces")
             .append($('<div class="row">')
               .append($('<div class="col-md-12">')
@@ -247,6 +268,14 @@
         }
       }
       console.log(dataToBackendDist);
+      for (var k = 0; k < directionsDisplay.length; k++)
+            if (directionsDisplay[k] != null) {
+              directionsDisplay[k].setMap(null);
+              directionsDisplay[k] = null;
+            }
+
+       directionsDisplay = [];
+       $("#seqPlaces").html("");
     }
 
     function initMap() {
@@ -291,7 +320,10 @@
               */
                 $("#places")
                   .append($('<div class="row" id="' + len + '">')
-                    .append($('<div class="col-md-10">')
+ 		    .append($('<div class="col-md-1">')
+                      .append($('<input type="radio" name="startpoint" value="'+len+'" aria-label="Start Point">')
+                      ))
+                    .append($('<div class="col-md-9">')
                       .append($('<p style="font-size:12px; title="' + placeAddress + '">')
                         .text(placeAddress)))
                     .append($('<div class="col-md-1">')
